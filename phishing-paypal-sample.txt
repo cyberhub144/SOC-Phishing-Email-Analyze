@@ -1,0 +1,45 @@
+=== SAMPLE PHISHING EMAIL #1 — PayPal Credential Harvest ===
+Category: Phishing | Expected Score: 90-100/100
+
+--- HEADERS ---
+From: paypal-security@paypa1.com
+Reply-To: harvest@collect-data.ru
+Received: from mail.paypa1.com (185.220.101.12)
+To: john.doe@company.com
+Subject: Urgent: Your PayPal account has been limited!
+Date: Sat, 27 Jun 2026 03:14:22 +0000
+X-Mailer: PHPMailer 5.2.27
+X-Originating-IP: 185.220.101.12
+Authentication-Results: spf=fail; dkim=fail; dmarc=fail
+Message-ID: <rand827364@paypa1.com>
+
+--- BODY ---
+Dear Valued Customer,
+
+We have noticed suspicious activity on your PayPal account. Your account
+has been temporarily limited.
+
+To restore access CLICK HERE IMMEDIATELY:
+http://paypa1-secure.verify-now.xyz/login?ref=acc827364&redirect=steal
+
+You must verify within 24 hours or your account will be permanently closed.
+
+PayPal Security Team
+
+--- IOCs TO INVESTIGATE ---
+IP:     185.220.101.12  → Check on AbuseIPDB / VirusTotal
+URL:    http://paypa1-secure.verify-now.xyz/login  → Detonate on URLScan.io
+Domain: paypa1.com  → WHOIS lookup (look for recent registration)
+Domain: collect-data.ru  → VirusTotal domain scan
+
+--- RED FLAGS ---
+[CRITICAL] SPF fail — sender domain unverified
+[CRITICAL] DKIM fail — email integrity cannot be confirmed
+[CRITICAL] DMARC fail — domain policy rejected this email
+[CRITICAL] Reply-To differs from From (harvest@collect-data.ru)
+[CRITICAL] Typosquatted domain: paypa1.com (mimics paypal.com)
+[CRITICAL] Credential-harvest URL with login keywords
+[CRITICAL] Known malicious IP range: 185.220.x.x
+[WARNING]  Urgency language: "CLICK HERE IMMEDIATELY", "24 hours"
+[WARNING]  PHPMailer bulk mailer signature
+[WARNING]  High-risk TLD: .ru (Reply-To domain)
