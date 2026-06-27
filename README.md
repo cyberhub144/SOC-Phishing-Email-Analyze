@@ -1,4 +1,6 @@
 # 🛡️ SOC Phishing Email Analyzer — Project 4
+![SOC Phishing Analyzer](assets/<img width="1900" height="713" alt="Screenshot 2026-06-27 120622" src="https://github.com/user-attachments/assets/cafb1022-45d3-46c7-b15f-823bce122f21" />
+)
 
 <div align="center">
 
