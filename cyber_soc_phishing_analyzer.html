@@ -1,0 +1,442 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--c:#00ff41;--cd:#00cc33;--cr:#ff2222;--cy:#ffcc00;--cb:#00aaff;--cp:#cc00ff;
+--bg:#050d0a;--bg2:#091409;--bg3:#0d1f0d;--border:#00ff4122;--border2:#00ff4144;
+--font:'Courier New',monospace
+}
+body{background:var(--bg);color:var(--c);font-family:var(--font);font-size:13px}
+canvas#matrix{position:absolute;top:0;left:0;opacity:0.07;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1;padding:0 0 1rem}
+.hud{display:flex;align-items:center;gap:10px;padding:.6rem 1rem;background:var(--bg2);border-bottom:1px solid var(--border2);position:relative;z-index:2}
+.hud-logo{width:34px;height:34px;border:1px solid var(--c);display:flex;align-items:center;justify-content:center;color:var(--c);font-size:18px;flex-shrink:0}
+.hud-title{font-size:15px;font-weight:700;color:var(--c);letter-spacing:.06em;text-transform:uppercase}
+.hud-sub{font-size:11px;color:#00ff4188;letter-spacing:.1em}
+.status-dots{margin-left:auto;display:flex;gap:6px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-green{background:var(--c)}
+.dot-yellow{background:var(--cy)}
+.dot-red{background:var(--cr)}
+.blink{animation:blink 1.1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{display:flex;border-bottom:1px solid var(--border2);background:var(--bg2)}
+.tab{padding:8px 14px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#00ff4166;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:var(--font);margin-bottom:-1px}
+.tab.active{color:var(--c);border-bottom-color:var(--c)}
+.tab:hover:not(.active){color:var(--c)}
+.panel{display:none;padding:.75rem 1rem}.panel.active{display:block}
+.cyber-card{border:1px solid var(--border2);background:var(--bg2);border-radius:4px;padding:.75rem 1rem;margin-bottom:.75rem;position:relative;overflow:hidden}
+.cyber-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c)}
+.card-head{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#00ff4188;margin-bottom:.6rem;display:flex;align-items:center;gap:6px}
+.card-head i{font-size:14px;color:var(--c)}
+textarea,input[type=text]{width:100%;background:#000;border:1px solid var(--border2);border-radius:2px;padding:8px;font-size:12px;color:var(--c);font-family:var(--font);resize:vertical;outline:none;line-height:1.5}
+textarea:focus,input[type=text]:focus{border-color:var(--c)}
+textarea{min-height:110px}
+.btn-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border:1px solid;font-family:var(--font);font-size:11px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border-radius:2px}
+.btn-primary{border-color:var(--c);color:#000;background:var(--c)}
+.btn-primary:hover{background:var(--cd);border-color:var(--cd)}
+.btn-danger{border-color:var(--cr);color:var(--cr);background:transparent}
+.btn-danger:hover{background:#ff222211}
+.btn-ghost{border-color:var(--border2);color:var(--c);background:transparent}
+.btn-ghost:hover{background:var(--border)}
+.btn-sm{padding:4px 9px;font-size:10px}
+.verdict-box{border:1px solid;border-radius:4px;padding:.75rem 1rem;margin-bottom:.75rem;position:relative}
+.verdict-phishing{border-color:var(--cr);background:#1a000011}
+.verdict-suspicious{border-color:var(--cy);background:#1a110011}
+.verdict-safe{border-color:var(--c);background:#001a0011}
+.verdict-label{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.verdict-phishing .verdict-label{color:var(--cr)}
+.verdict-suspicious .verdict-label{color:var(--cy)}
+.verdict-safe .verdict-label{color:var(--c)}
+.verdict-sub{font-size:11px;color:#00ff4188;margin-top:5px;letter-spacing:.04em}
+.score-track{height:6px;background:#000;border:1px solid var(--border2);border-radius:2px;margin-top:.6rem;overflow:hidden}
+.score-fill{height:100%;transition:width .8s;border-radius:2px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.75rem}
+.metric{background:#000;border:1px solid var(--border2);border-radius:2px;padding:.6rem .75rem}
+.metric-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#00ff4166;margin-bottom:4px}
+.metric-val{font-size:22px;font-weight:700}
+.metric-sub{font-size:10px;color:#00ff4166;margin-top:2px}
+.ioc-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.ioc-row:last-child{border-bottom:none}
+.ioc-type{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#00ff4166;width:80px;flex-shrink:0;padding-top:1px}
+.ioc-val{font-size:12px;color:var(--c);flex:1;word-break:break-all}
+.flag-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.flag-row:last-child{border-bottom:none}
+.flag-icon{font-size:15px;flex-shrink:0}
+.flag-text{font-size:12px;flex:1}
+.flag-detail{font-size:11px;color:#00ff4166;margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:2px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid}
+.badge-danger{border-color:var(--cr);color:var(--cr);background:#ff222211}
+.badge-warn{border-color:var(--cy);color:var(--cy);background:#ffcc0011}
+.badge-ok{border-color:var(--c);color:var(--c);background:#00ff4111}
+.badge-ghost{border-color:var(--border2);color:#00ff4166;background:transparent}
+.sample-item{border:1px solid var(--border2);background:#000;border-radius:2px;padding:.6rem .75rem;margin-bottom:.5rem;cursor:pointer;display:flex;align-items:flex-start;gap:8px;transition:border-color .15s}
+.sample-item:hover{border-color:var(--c)}
+.sample-item.danger{border-left:3px solid var(--cr)}
+.sample-item.warn{border-left:3px solid var(--cy)}
+.sample-item.safe{border-left:3px solid var(--c)}
+.sample-title{font-size:12px;font-weight:700;color:var(--c)}
+.sample-from{font-size:10px;color:#00ff4166;margin-top:2px}
+.tool-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.tool-row:last-child{border-bottom:none}
+.tool-name{font-size:12px;font-weight:700;color:var(--c)}
+.tool-desc{font-size:10px;color:#00ff4166;margin-top:2px}
+.spinner{display:inline-block;width:14px;height:14px;border:1.5px solid var(--border2);border-top-color:var(--c);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-steps{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.5rem}
+.step{font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border:1px solid;border-radius:2px;display:flex;align-items:center;gap:4px}
+.step-done{border-color:var(--c);color:var(--c)}
+.step-run{border-color:var(--cy);color:var(--cy)}
+.step-pending{border-color:var(--border2);color:#00ff4144}
+.htable{width:100%;border-collapse:collapse;font-size:11px}
+.htable td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:top;word-break:break-all}
+.htable td:first-child{color:#00ff4166;width:150px;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.htable td:last-child{color:var(--c)}
+.prompt-out{font-size:11px;color:var(--cr);letter-spacing:.04em;margin-top:.5rem;padding:.5rem .75rem;border:1px solid var(--border);background:#000;border-radius:2px}
+.hidden{display:none}
+.scanline{position:absolute;top:0;left:0;width:100%;height:2px;background:rgba(0,255,65,.06);animation:scan 4s linear infinite;pointer-events:none;z-index:0}
+@keyframes scan{0%{top:0}100%{top:100%}}
+.cyber-hdr-bg{background:var(--bg);position:relative;overflow:hidden}
+</style>
+
+<div class="cyber-hdr-bg">
+<canvas id="matrix" width="680" height="56"></canvas>
+<div class="hud">
+  <div class="hud-logo"><i class="ti ti-shield-exclamation" aria-hidden="true"></i></div>
+  <div>
+    <div class="hud-title">SOC // Phishing Analyzer</div>
+    <div class="hud-sub">Project 04 &mdash; Threat Intelligence &bull; IOC Analysis &bull; Email Security</div>
+  </div>
+  <div class="status-dots">
+    <span style="font-size:10px;color:#00ff4166;text-transform:uppercase;letter-spacing:.08em">Systems</span>
+    <span class="dot dot-green blink"></span>
+    <span class="dot dot-yellow"></span>
+    <span class="dot dot-red" style="opacity:.3"></span>
+    <span id="overall-badge" style="margin-left:4px"></span>
+  </div>
+</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('analyze')"><i class="ti ti-terminal-2" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Analyze</button>
+  <button class="tab" onclick="switchTab('results')"><i class="ti ti-bug" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Findings</button>
+  <button class="tab" onclick="switchTab('samples')"><i class="ti ti-files" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Samples</button>
+  <button class="tab" onclick="switchTab('tools')"><i class="ti ti-satellite" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Toolkit</button>
+</div>
+
+<div id="panel-analyze" class="panel active">
+  <div class="cyber-card">
+    <div class="card-head"><i class="ti ti-mail" aria-hidden="true"></i> Raw email headers</div>
+    <textarea id="inp-headers" placeholder="Paste raw email headers...
+e.g.
+From: paypal-security@paypa1.com
+Reply-To: collect@evil-domain.ru
+Received: from mail.paypa1.com (185.220.101.12)
+Authentication-Results: spf=fail; dkim=fail; dmarc=fail
+X-Originating-IP: 185.220.101.12"></textarea>
+  </div>
+  <div class="cyber-card">
+    <div class="card-head"><i class="ti ti-code" aria-hidden="true"></i> Email body</div>
+    <textarea id="inp-body" placeholder="Paste email body or raw .eml content...
+e.g.
+Dear Customer, your account is suspended.
+Click here: http://paypa1-secure.verify-now.xyz/login
+Verify within 24 hours or face permanent closure." style="min-height:100px"></textarea>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="runAnalysis()"><i class="ti ti-radar" aria-hidden="true"></i> Run SOC scan</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadSample('phishing')"><i class="ti ti-virus" aria-hidden="true"></i> Phishing sample</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadSample('phishing2')"><i class="ti ti-alert-triangle" aria-hidden="true"></i> BEC sample</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadSample('suspicious')"><i class="ti ti-question-mark" aria-hidden="true"></i> Suspicious</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadSample('safe')"><i class="ti ti-check" aria-hidden="true"></i> Clean email</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearAll()"><i class="ti ti-trash" aria-hidden="true"></i> Clear</button>
+  </div>
+  <div id="scan-progress" class="hidden" style="margin-top:.75rem">
+    <div class="progress-steps" id="steps-el"></div>
+    <div style="font-size:11px;color:var(--cy)"><span class="spinner"></span> <span id="scan-msg">Initializing…</span></div>
+  </div>
+</div>
+
+<div id="panel-results" class="panel">
+  <div id="res-empty" style="text-align:center;padding:2rem">
+    <i class="ti ti-radar-off" style="font-size:40px;color:#00ff4133;display:block;margin-bottom:.5rem" aria-hidden="true"></i>
+    <div style="font-size:12px;color:#00ff4166;text-transform:uppercase;letter-spacing:.08em">No scan data — run an analysis first</div>
+  </div>
+  <div id="res-content" class="hidden">
+    <div id="verdict-el"></div>
+    <div class="grid3" id="metrics-el"></div>
+    <div class="cyber-card">
+      <div class="card-head"><i class="ti ti-list-search" aria-hidden="true"></i> Indicators of compromise (IOCs)</div>
+      <div id="ioc-el"></div>
+    </div>
+    <div class="cyber-card">
+      <div class="card-head"><i class="ti ti-flag-3" aria-hidden="true"></i> Red flags</div>
+      <div id="flags-el"></div>
+    </div>
+    <div class="cyber-card">
+      <div class="card-head"><i class="ti ti-table" aria-hidden="true"></i> Header analysis</div>
+      <table class="htable"><tbody id="htable-el"></tbody></table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="exportTxt()"><i class="ti ti-download" aria-hidden="true"></i> Export report</button>
+      <button class="btn btn-ghost btn-sm" onclick="sendPrompt('Generate a full SOC incident report in markdown for this phishing email analysis. Include MITRE ATT&CK techniques (e.g. T1566, T1078), severity rating, recommended remediation steps, containment actions, and analyst notes.')">Full IR report ↗</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel-samples" class="panel">
+  <div class="cyber-card">
+    <div class="card-head"><i class="ti ti-database" aria-hidden="true"></i> Sample email library</div>
+    <div class="sample-item danger" onclick="loadAndGo('phishing')">
+      <div style="color:var(--cr);font-size:18px;flex-shrink:0"><i class="ti ti-alert-circle" aria-hidden="true"></i></div>
+      <div>
+        <div class="sample-title">PayPal credential harvest</div>
+        <div class="sample-from">paypal-security@paypa1.com &bull; IP: 185.220.101.12</div>
+        <div style="margin-top:5px"><span class="badge badge-danger">Phishing</span> <span class="badge badge-ghost">SPF fail</span> <span class="badge badge-ghost">DKIM fail</span> <span class="badge badge-ghost">Typosquat</span></div>
+      </div>
+    </div>
+    <div class="sample-item danger" onclick="loadAndGo('phishing2')">
+      <div style="color:var(--cr);font-size:18px;flex-shrink:0"><i class="ti ti-alert-circle" aria-hidden="true"></i></div>
+      <div>
+        <div class="sample-title">Microsoft 365 MFA lure</div>
+        <div class="sample-from">admin@microsofft-corp.net &bull; IP: 91.234.99.11</div>
+        <div style="margin-top:5px"><span class="badge badge-danger">Phishing</span> <span class="badge badge-ghost">Lookalike domain</span> <span class="badge badge-ghost">Token harvest</span></div>
+      </div>
+    </div>
+    <div class="sample-item warn" onclick="loadAndGo('suspicious')">
+      <div style="color:var(--cy);font-size:18px;flex-shrink:0"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+      <div>
+        <div class="sample-title">BEC invoice fraud</div>
+        <div class="sample-from">billing@vendor-invoices.net &bull; IP: 104.21.55.8</div>
+        <div style="margin-top:5px"><span class="badge badge-warn">Suspicious</span> <span class="badge badge-ghost">Reply-To mismatch</span> <span class="badge badge-ghost">Wire transfer</span></div>
+      </div>
+    </div>
+    <div class="sample-item safe" onclick="loadAndGo('safe')">
+      <div style="color:var(--c);font-size:18px;flex-shrink:0"><i class="ti ti-circle-check" aria-hidden="true"></i></div>
+      <div>
+        <div class="sample-title">GitHub notification (legitimate)</div>
+        <div class="sample-from">noreply@github.com &bull; IP: 192.30.252.0</div>
+        <div style="margin-top:5px"><span class="badge badge-ok">Clean</span> <span class="badge badge-ghost">DKIM pass</span> <span class="badge badge-ghost">SPF pass</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-tools" class="panel">
+  <div class="cyber-card">
+    <div class="card-head"><i class="ti ti-satellite" aria-hidden="true"></i> Threat intel platforms</div>
+    <div class="tool-row">
+      <div><div class="tool-name">MXToolbox</div><div class="tool-desc">Header analysis &bull; SPF/DKIM/DMARC &bull; IP blacklist check</div></div>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-ghost btn-sm" onclick="openLink('https://mxtoolbox.com/EmailHeaders.aspx')">Headers <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="openLink('https://mxtoolbox.com/blacklists.aspx')">Blacklist <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">VirusTotal</div><div class="tool-desc">URL &bull; IP &bull; domain &bull; file multi-engine reputation scan</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://www.virustotal.com/')">Open <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">URLScan.io</div><div class="tool-desc">Safe URL detonation &bull; screenshot &bull; DOM analysis</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://urlscan.io/')">Scan URL <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">AbuseIPDB</div><div class="tool-desc">Sender IP reputation &bull; community abuse reports</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://www.abuseipdb.com/')">Check IP <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">PhishTank</div><div class="tool-desc">Crowdsourced phishing URL database</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://phishtank.org/')">Lookup <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">Google Safe Browsing</div><div class="tool-desc">Malware and phishing URL check</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://transparencyreport.google.com/safe-browsing/search')">Check <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+    <div class="tool-row">
+      <div><div class="tool-name">ICANN Whois</div><div class="tool-desc">Domain registration &bull; registrant &bull; age lookup</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openLink('https://lookup.icann.org/')">Lookup <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="cyber-card">
+    <div class="card-head"><i class="ti ti-crosshair" aria-hidden="true"></i> Quick IOC lookup</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <input type="text" id="ioc-inp" placeholder="Enter IP, URL, or domain..." style="flex:1;min-width:180px">
+      <button class="btn btn-ghost btn-sm" onclick="sendPrompt('As a SOC analyst, analyze this IOC: ' + document.getElementById('ioc-inp').value + '. Check its reputation, identify if it is known malicious, link to known threat actors or campaigns, provide MITRE ATT&CK mapping if possible, and give remediation steps.')">Analyze IOC ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLES={
+  phishing:{
+    h:`From: paypal-security@paypa1.com\nReply-To: harvest@collect-data.ru\nReceived: from mail.paypa1.com (185.220.101.12)\nTo: john.doe@company.com\nSubject: Urgent: Your PayPal account has been limited!\nDate: Sat, 27 Jun 2026 03:14:22 +0000\nX-Mailer: PHPMailer 5.2.27\nX-Originating-IP: 185.220.101.12\nAuthentication-Results: spf=fail; dkim=fail; dmarc=fail`,
+    b:`Dear Valued Customer,\n\nWe noticed suspicious activity. Your account is limited.\n\nVerify immediately:\nhttp://paypa1-secure.verify-now.xyz/login?ref=acc827364\n\nVerify within 24 hours or your account will be permanently closed.\n\nPayPal Security Team`
+  },
+  phishing2:{
+    h:`From: admin@microsofft-corp.net\nReply-To: admin@microsofft-corp.net\nReceived: from smtp.microsofft-corp.net (91.234.99.11)\nTo: employee@targetcorp.com\nSubject: [ACTION REQUIRED] MFA configuration update\nDate: Sat, 27 Jun 2026 08:00:01 +0000\nX-Mailer: Sendgrid-bulk\nAuthentication-Results: spf=pass smtp.mailfrom=microsofft-corp.net; dkim=none; dmarc=fail`,
+    b:`Your Microsoft 365 MFA has expired.\n\nRe-authenticate now:\nhttps://microsofft-corp.net/mfa-update?token=eyJhbGciOiJSUzI1NiJ9.abc123\n\nIgnoring this locks your account in 2 hours.\n\nMicrosoft IT Security`
+  },
+  suspicious:{
+    h:`From: billing@vendor-invoices.net\nReply-To: payments@different-domain.io\nReceived: from mail.vendor-invoices.net (104.21.55.8)\nTo: accounts@company.com\nSubject: Invoice #INV-2026-04421 - Payment Due\nDate: Fri, 26 Jun 2026 18:30:00 +0000\nAuthentication-Results: spf=pass; dkim=pass; dmarc=none`,
+    b:`Please find invoice #INV-2026-04421 for $14,750.00 due immediately.\n\nWire transfer to:\nBank: First Global Bank\nAccount: 7729301842\nRouting: 021000021\n\nBilling Department`
+  },
+  safe:{
+    h:`From: noreply@github.com\nReceived: from mail.github.com (192.30.252.0)\nTo: user@company.com\nSubject: [GitHub] OAuth application authorized\nDate: Sat, 27 Jun 2026 10:05:33 +0000\nDKIM-Signature: v=1; a=rsa-sha256; d=github.com;\nAuthentication-Results: spf=pass smtp.mailfrom=github.com; dkim=pass header.d=github.com; dmarc=pass`,
+    b:`Hi,\n\nVS Code GitHub was authorized to access your account.\n\nIf you didn't authorize this, visit https://github.com/settings/applications\n\nThe GitHub Team`
+  }
+};
+
+let lastResult=null;
+
+function switchTab(t){
+  ['analyze','results','samples','tools'].forEach((id,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
+    document.getElementById('panel-'+id).classList.toggle('active',id===t);
+  });
+}
+
+function loadSample(k){
+  const s=SAMPLES[k];if(!s)return;
+  document.getElementById('inp-headers').value=s.h;
+  document.getElementById('inp-body').value=s.b;
+}
+
+function loadAndGo(k){loadSample(k);switchTab('analyze');}
+
+function clearAll(){
+  document.getElementById('inp-headers').value='';
+  document.getElementById('inp-body').value='';
+}
+
+function extractIP(t){return[...new Set((t.match(/\b(\d{1,3}\.){3}\d{1,3}\b/g)||[]).filter(ip=>!ip.startsWith('192.168')&&!ip.startsWith('10.')&&!ip.startsWith('127.')))]}
+function extractURLs(t){return[...new Set(t.match(/https?:\/\/[^\s\)"'<>]+/gi)||[])]}
+function extractDomains(h){
+  const d=[];
+  const frm=(h.match(/^From:.*$/im)||[])[0];
+  if(frm){const m=frm.match(/@([a-zA-Z0-9.\-]+)/);if(m)d.push(m[1]);}
+  (h.match(/from\s+([a-zA-Z0-9.\-]+)\s/gi)||[]).forEach(r=>{const m=r.match(/from\s+([a-zA-Z0-9.\-]+)/i);if(m)d.push(m[1]);});
+  return[...new Set(d)].filter(x=>x.length>3);
+}
+function parseHeaders(raw){
+  const p={};let cur=null;
+  for(const l of raw.split('\n')){
+    if(/^\s+/.test(l)&&cur){p[cur]+=' '+l.trim();continue;}
+    const m=l.match(/^([^:]+):\s*(.*)$/);
+    if(m){cur=m[1].trim().toLowerCase();p[cur]=m[2].trim();}
+  }
+  return p;
+}
+function score(headers,body,parsed){
+  const flags=[];let s=0;const raw=headers+' '+body;
+  const auth=parsed['authentication-results']||'';
+  const from=parsed['from']||'';
+  const replyTo=parsed['reply-to']||'';
+  const mailer=parsed['x-mailer']||'';
+  const subj=parsed['subject']||'';
+  const frDomain=(from.match(/@([a-zA-Z0-9.\-]+)/)||['',''])[1];
+  const ips=extractIP(raw);const urls=extractURLs(raw);
+  if(/spf=fail/i.test(auth)){s+=25;flags.push({sev:'danger',t:'SPF authentication failed',d:'Sender domain unverified — likely spoofed.'})}
+  if(/dkim=fail|dkim=none/i.test(auth)){s+=20;flags.push({sev:'danger',t:'DKIM missing or failed',d:'Email integrity cannot be verified. High risk of tampering.'})}
+  if(/dmarc=fail/i.test(auth)){s+=15;flags.push({sev:'danger',t:'DMARC policy rejected email',d:'Domain owner policy failed — strong phishing indicator.'})}
+  if(from&&replyTo&&!replyTo.includes(frDomain||'NOMATCH')){s+=20;flags.push({sev:'danger',t:'Reply-To mismatch',d:`From: ${from.slice(0,55)} | Reply-To: ${replyTo.slice(0,55)}`})}
+  if(/paypa1|microsofft|g00gle|arnazon|linkedln/i.test(raw)){s+=30;flags.push({sev:'danger',t:'Typosquatted / lookalike domain',d:'Domain mimics trusted brand using character substitution.'})}
+  if(/urgent|immediately|suspended|verify now|24 hours|limited|click here|action required/i.test(subj+' '+body)){s+=15;flags.push({sev:'warning',t:'Urgency / fear language detected',d:'Psychological pressure tactic — common in phishing lures.'})}
+  if(urls.some(u=>{try{return /verify|secure|login|update|confirm|mfa/i.test(u)&&!/^(github|microsoft|paypal|google|apple)\.com$/.test(new URL(u).hostname);}catch(e){return false;}})){s+=25;flags.push({sev:'danger',t:'Credential-harvest URL detected',d:'URL contains login keywords but domain is not a known trusted source.'})}
+  if(/phpmailer|sendgrid-bulk|massmail/i.test(mailer)){s+=10;flags.push({sev:'warning',t:'Bulk/script mailer signature',d:`X-Mailer: ${mailer}`})}
+  if(ips.some(ip=>ip.startsWith('185.220')||ip.startsWith('91.234')||ip.startsWith('45.142'))){s+=20;flags.push({sev:'danger',t:'Known malicious IP range',d:'IP in ranges commonly linked to phishing infrastructure.'})}
+  if(/wire transfer|bank account|routing number/i.test(body)){s+=25;flags.push({sev:'danger',t:'Financial fraud / BEC pattern',d:'Request for wire transfer or banking details — classic BEC attack.'})}
+  if(/\.ru\b|\.xyz\b|\.top\b|\.tk\b/i.test(raw)){s+=15;flags.push({sev:'warning',t:'High-risk TLD detected',d:'.ru / .xyz / .top / .tk disproportionately used in phishing.'})}
+  s=Math.min(100,s);
+  let verdict,vsev;
+  if(s>=60){verdict='Phishing detected';vsev='phishing';}
+  else if(s>=25){verdict='Suspicious — review required';vsev='suspicious';}
+  else{verdict='Likely clean';vsev='safe';}
+  return{s,verdict,vsev,flags,ips,urls,domains:extractDomains(headers),parsed};
+}
+
+async function runAnalysis(){
+  const h=document.getElementById('inp-headers').value.trim();
+  const b=document.getElementById('inp-body').value.trim();
+  if(!h&&!b){alert('[ERROR] No input. Paste headers or body first.');return;}
+  const steps=['Init scanner','Parse headers','Extract IOCs','Check auth','Scan URLs','Score threat','Build report'];
+  const stEl=document.getElementById('steps-el');
+  const msgEl=document.getElementById('scan-msg');
+  document.getElementById('scan-progress').classList.remove('hidden');
+  for(let i=0;i<steps.length;i++){
+    stEl.innerHTML=steps.map((s,j)=>{
+      let cls='step-pending';
+      if(j<i)cls='step-done';else if(j===i)cls='step-run';
+      const ic=j<i?'<i class="ti ti-check" style="font-size:10px"></i>':j===i?'<span class="spinner" style="width:10px;height:10px;border-width:1.5px"></span>':'';
+      return`<span class="step ${cls}">${ic}${s}</span>`;
+    }).join('');
+    msgEl.textContent=steps[i]+'…';
+    await new Promise(r=>setTimeout(r,320));
+  }
+  const parsed=parseHeaders(h);
+  const result=score(h,b,parsed);
+  lastResult={...result,h,b,ts:new Date().toISOString()};
+  renderResults(lastResult);
+  document.getElementById('scan-progress').classList.add('hidden');
+  stEl.innerHTML='';
+  switchTab('results');
+  const ob=document.getElementById('overall-badge');
+  if(result.vsev==='phishing')ob.innerHTML='<span class="badge badge-danger">THREAT DETECTED</span>';
+  else if(result.vsev==='suspicious')ob.innerHTML='<span class="badge badge-warn">SUSPICIOUS</span>';
+  else ob.innerHTML='<span class="badge badge-ok">CLEAN</span>';
+}
+
+function renderResults(r){
+  document.getElementById('res-empty').classList.add('hidden');
+  document.getElementById('res-content').classList.remove('hidden');
+  const col=r.vsev==='phishing'?'var(--cr)':r.vsev==='suspicious'?'var(--cy)':'var(--c)';
+  const fillCol=r.vsev==='phishing'?'#ff2222':r.vsev==='suspicious'?'#ffcc00':'#00ff41';
+  const icon=r.vsev==='phishing'?'ti-shield-x':r.vsev==='suspicious'?'ti-alert-triangle':'ti-shield-check';
+  document.getElementById('verdict-el').innerHTML=`<div class="verdict-box verdict-${r.vsev}">
+    <div class="verdict-label"><i class="ti ${icon}" aria-hidden="true"></i>${r.verdict.toUpperCase()}</div>
+    <div class="verdict-sub">THREAT SCORE: ${r.s}/100 &bull; ${r.flags.length} FLAG${r.flags.length!==1?'S':''} &bull; ${r.ips.length} IP${r.ips.length!==1?'s':''} &bull; ${r.urls.length} URL${r.urls.length!==1?'s':''} &bull; ${new Date(r.ts).toLocaleTimeString()}</div>
+    <div class="score-track"><div class="score-fill" style="width:${r.s}%;background:${fillCol}"></div></div>
+  </div>`;
+  document.getElementById('metrics-el').innerHTML=`
+    <div class="metric"><div class="metric-lbl">Threat score</div><div class="metric-val" style="color:${col}">${r.s}<span style="font-size:14px;color:#00ff4166">/100</span></div></div>
+    <div class="metric"><div class="metric-lbl">Red flags</div><div class="metric-val" style="color:${col}">${r.flags.length}</div><div class="metric-sub">${r.flags.filter(f=>f.sev==='danger').length} critical &bull; ${r.flags.filter(f=>f.sev==='warning').length} warn</div></div>
+    <div class="metric"><div class="metric-lbl">IOCs</div><div class="metric-val">${r.ips.length+r.urls.length+r.domains.length}</div><div class="metric-sub">${r.ips.length} IPs &bull; ${r.urls.length} URLs</div></div>`;
+  let iocHtml='';
+  r.ips.forEach(ip=>iocHtml+=`<div class="ioc-row"><div class="ioc-type">IP addr</div><div class="ioc-val">${ip}</div><button class="btn btn-ghost btn-sm" onclick="openLink('https://www.virustotal.com/gui/ip-address/${ip}')">VT <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button></div>`);
+  r.urls.forEach(u=>{try{iocHtml+=`<div class="ioc-row"><div class="ioc-type">URL</div><div class="ioc-val">${u.length>65?u.slice(0,65)+'…':u}</div><button class="btn btn-ghost btn-sm" onclick="openLink('https://urlscan.io/search/#page.domain:${new URL(u).hostname}')">Scan <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button></div>`;}catch(e){}});
+  r.domains.forEach(d=>iocHtml+=`<div class="ioc-row"><div class="ioc-type">Domain</div><div class="ioc-val">${d}</div><button class="btn btn-ghost btn-sm" onclick="openLink('https://www.virustotal.com/gui/domain/${d}')">VT <i class="ti ti-external-link" style="font-size:10px" aria-hidden="true"></i></button></div>`);
+  document.getElementById('ioc-el').innerHTML=iocHtml||'<div style="font-size:12px;color:#00ff4166;padding:6px 0">No IOCs extracted.</div>';
+  const flagColors={danger:'var(--cr)',warning:'var(--cy)'};
+  document.getElementById('flags-el').innerHTML=r.flags.length?r.flags.map(f=>`<div class="flag-row"><div class="flag-icon" style="color:${flagColors[f.sev]}"><i class="ti ti-${f.sev==='danger'?'circle-x':'alert-triangle'}" aria-hidden="true"></i></div><div><div class="flag-text" style="color:${flagColors[f.sev]}">${f.t}</div><div class="flag-detail">${f.d}</div></div></div>`).join(''):'<div style="font-size:12px;color:#00ff4166;padding:6px 0">No red flags detected.</div>';
+  const showKeys=['from','reply-to','to','subject','date','x-mailer','x-originating-ip','authentication-results','dkim-signature','message-id'];
+  document.getElementById('htable-el').innerHTML=showKeys.filter(k=>r.parsed[k]).map(k=>`<tr><td>${k}</td><td>${r.parsed[k].length>110?r.parsed[k].slice(0,110)+'…':r.parsed[k]}</td></tr>`).join('');
+}
+
+function exportTxt(){
+  if(!lastResult)return;
+  const r=lastResult;
+  const lines=['=== SOC PHISHING ANALYSIS REPORT ===',`Timestamp: ${r.ts}`,`Verdict: ${r.verdict}`,`Threat Score: ${r.s}/100`,'',`Flags: ${r.flags.length} (${r.flags.filter(f=>f.sev==='danger').length} critical)`,`IPs: ${r.ips.join(', ')||'none'}`,`URLs:\n${r.urls.join('\n')||'none'}`,`Domains: ${r.domains.join(', ')||'none'}`,'','--- RED FLAGS ---',...r.flags.map((f,i)=>`${i+1}. [${f.sev.toUpperCase()}] ${f.t}\n   ${f.d}`),'','--- HEADERS ---',r.h,'','--- BODY ---',r.b,'','=== END REPORT ==='];
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));
+  a.download=`soc-report-${Date.now()}.txt`;a.click();
+}
+
+(function initMatrix(){
+  const c=document.getElementById('matrix');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  const W=680,H=56;c.width=W;c.height=H;
+  const cols=Math.floor(W/14);const drops=Array(cols).fill(1);
+  const chars='ABCDEF0123456789@#$%&!?<>{}[]|\\/:;';
+  function draw(){
+    ctx.fillStyle='rgba(5,13,10,0.18)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00ff41';ctx.font='11px monospace';
+    drops.forEach((y,i)=>{
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*14,y*14);
+      if(y*14>H&&Math.random()>0.97)drops[i]=0;
+      drops[i]++;
+    });
+  }
+  setInterval(draw,60);
+})();
+</script>
